@@ -1,0 +1,21 @@
+version: "3"
+
+services:
+  source-db:
+    image: debezium/example-postgres:1.2
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+
+  localstack:
+    image: localstack/localstack:0.11.2
+    ports:
+      - "4568:4568"
+    environment:
+      - SERVICES=kinesis
+      - DEFAULT_REGION=eu-west-1
+      - DEBUG=1
+      - AWS_CBOR_DISABLE=1
