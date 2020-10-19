@@ -19,3 +19,11 @@ services:
       - DEFAULT_REGION=eu-west-1
       - DEBUG=1
       - AWS_CBOR_DISABLE=1
+
+  pubsub:
+    image: storytel/gcp-pubsub-emulator:latest
+    ports:
+      - "8085:8085"
+    command:
+      - "--host=0.0.0.0"
+      - "--port=8085"
