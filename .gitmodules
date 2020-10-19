@@ -1,0 +1,3 @@
+[submodule "debezium"]
+	path = debezium
+	url = https://github.com/debezium/debezium.git

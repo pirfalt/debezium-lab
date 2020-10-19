@@ -1,0 +1,63 @@
+From 8d9616f113322ba8f291fb5131f8dc259dfcfff1 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Emil=20Pirfa=CC=88lt?= <emil.pirfalt@jayway.com>
+Date: Mon, 19 Oct 2020 21:44:13 +0200
+Subject: [PATCH] Add support for local kinesis by adding endpoint
+ configuration
+
+---
+ .../server/kinesis/KinesisChangeConsumer.java      | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/debezium-server/debezium-server-kinesis/src/main/java/io/debezium/server/kinesis/KinesisChangeConsumer.java b/debezium-server/debezium-server-kinesis/src/main/java/io/debezium/server/kinesis/KinesisChangeConsumer.java
+index 9d7c5759e..0262fe206 100644
+--- a/debezium-server/debezium-server-kinesis/src/main/java/io/debezium/server/kinesis/KinesisChangeConsumer.java
++++ b/debezium-server/debezium-server-kinesis/src/main/java/io/debezium/server/kinesis/KinesisChangeConsumer.java
+@@ -5,7 +5,9 @@
+  */
+ package io.debezium.server.kinesis;
+ 
++import java.net.URI;
+ import java.util.List;
++import java.util.Optional;
+ 
+ import javax.annotation.PostConstruct;
+ import javax.annotation.PreDestroy;
+@@ -30,6 +32,7 @@
+ import software.amazon.awssdk.core.SdkBytes;
+ import software.amazon.awssdk.regions.Region;
+ import software.amazon.awssdk.services.kinesis.KinesisClient;
++import software.amazon.awssdk.services.kinesis.KinesisClientBuilder;
+ import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
+ 
+ /**
+@@ -46,8 +49,10 @@
+ 
+     private static final String PROP_PREFIX = "debezium.sink.kinesis.";
+     private static final String PROP_REGION_NAME = PROP_PREFIX + "region";
++    private static final String PROP_ENDPOINT_NAME = PROP_PREFIX + "endpoint";
+ 
+     private String region;
++    private Optional<String> endpoint;
+ 
+     @ConfigProperty(name = PROP_PREFIX + "credentials.profile", defaultValue = "default")
+     String credentialsProfile;
+@@ -71,10 +76,13 @@ void connect() {
+ 
+         final Config config = ConfigProvider.getConfig();
+         region = config.getValue(PROP_REGION_NAME, String.class);
+-        client = KinesisClient.builder()
++        endpoint = config.getOptionalValue(PROP_ENDPOINT_NAME, String.class);
++        KinesisClientBuilder builder = KinesisClient
++                .builder()
+                 .region(Region.of(region))
+-                .credentialsProvider(ProfileCredentialsProvider.create(credentialsProfile))
+-                .build();
++                .credentialsProvider(ProfileCredentialsProvider.create(credentialsProfile));
++        endpoint.ifPresent(v -> builder.endpointOverride(URI.create(v)));
++        client = builder.build();
+         LOGGER.info("Using default KinesisClient '{}'", client);
+     }
+ 
+-- 
+2.23.0
+

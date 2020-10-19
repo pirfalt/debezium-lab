@@ -88,26 +88,48 @@ https://debezium.io/documentation/reference/1.2/operations/debezium-server.html
 
 Follow instructions. Download to `./debezeum-server`.
 
+#### Download dist
+
+```sh
+# Debezium server
+curl -O https://repo1.maven.org/maven2/io/debezium/debezium-server-dist/1.3.0.Final/debezium-server-dist-1.3.0.Final.tar.gz
+gunzip debezium-server-dist-1.3.0.Final.tar.gz
+tar -xvf debezium-server-dist-1.3.0.Final.tar
+
+# Common logging dependency
+curl -O https://repo1.maven.org/maven2/commons-logging/commons-logging/1.2/commons-logging-1.2.jar
+mv commons-logging-1.2.jar debezeum-server/lib
+```
+
+#### Git clone
+
 ```sh
 # Clone the upstream repo
-git clone https://github.com/debezium/debezium.git
+git submodule add https://github.com/debezium/debezium.git
 cd debezium
 
-# Checkout the latest release
-git checkout v1.2.0.Beta2
-
 # Patch to enable using a local kinesis
-# TODO
+git apply ../0001-Add-support-for-local-kinesis-by-adding-endpoint-con.patch
 
 # Build
 mvn install -DskipITs -DskipTests
 
 # Replace the pre-packaged jar file with the newly built version
-cp ./debezium-server/target/debezium-server-1.2.0.Beta2-runner.jar ../debezium-server/debezium-server-1.2.0.Beta2-runner.jar
+cp debezium-server/debezium-server-kinesis/target/debezium-server-kinesis-1.4.0-SNAPSHOT.jar ../debezium-server/lib/debezium-server-kinesis-1.3.0.Final.jar
+cd ..
+```
+
+#### Start
+
+```sh
+# Copy config
+cp application.properties debezium-server/conf/
 
 # Run, from the pre-packaged directory
 # With cbor disabled, since the local kinesis does not support it
-cd ../debezium-server
+cd debezium-server
+mkdir data
+touch data/offsets.dat
 JAVA_OPTS='-Daws.cborEnabled=false' ./run.sh
 ```
 
