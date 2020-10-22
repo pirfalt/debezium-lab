@@ -1,0 +1,88 @@
+From 1ce7c7f12fad9b645d013a28751575a16f993424 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Emil=20Pirfa=CC=88lt?= <emil.pirfalt@jayway.com>
+Date: Thu, 22 Oct 2020 19:20:40 +0200
+Subject: [PATCH] Add support for pubsub emulator by adding endpoint
+ configuration
+
+---
+ .../server/pubsub/PubSubChangeConsumer.java   | 26 ++++++++++++++++---
+ 1 file changed, 23 insertions(+), 3 deletions(-)
+
+diff --git a/debezium-server/debezium-server-pubsub/src/main/java/io/debezium/server/pubsub/PubSubChangeConsumer.java b/debezium-server/debezium-server-pubsub/src/main/java/io/debezium/server/pubsub/PubSubChangeConsumer.java
+index 73887eabc..3ba8788cd 100644
+--- a/debezium-server/debezium-server-pubsub/src/main/java/io/debezium/server/pubsub/PubSubChangeConsumer.java
++++ b/debezium-server/debezium-server-pubsub/src/main/java/io/debezium/server/pubsub/PubSubChangeConsumer.java
+@@ -10,6 +10,7 @@
+ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
++import java.util.Optional;
+ import java.util.concurrent.ExecutionException;
+ 
+ import javax.annotation.PostConstruct;
+@@ -27,8 +28,13 @@
+ 
+ import com.google.api.core.ApiFuture;
+ import com.google.api.core.ApiFutures;
++import com.google.api.gax.core.NoCredentialsProvider;
++import com.google.api.gax.grpc.GrpcTransportChannel;
++import com.google.api.gax.rpc.FixedTransportChannelProvider;
++import com.google.api.gax.rpc.TransportChannelProvider;
+ import com.google.cloud.ServiceOptions;
+ import com.google.cloud.pubsub.v1.Publisher;
++import com.google.cloud.pubsub.v1.Publisher.Builder;
+ import com.google.protobuf.ByteString;
+ import com.google.pubsub.v1.ProjectTopicName;
+ import com.google.pubsub.v1.PubsubMessage;
+@@ -39,6 +45,8 @@
+ import io.debezium.engine.DebeziumEngine.RecordCommitter;
+ import io.debezium.server.BaseChangeConsumer;
+ import io.debezium.server.CustomConsumerBuilder;
++import io.grpc.ManagedChannel;
++import io.grpc.ManagedChannelBuilder;
+ 
+ /**
+  * Implementation of the consumer that delivers the messages into Google Pub/Sub destination.
+@@ -54,12 +62,14 @@
+ 
+     private static final String PROP_PREFIX = "debezium.sink.pubsub.";
+     private static final String PROP_PROJECT_ID = PROP_PREFIX + "project.id";
++    private static final String PROP_ENDPOINT_NAME = PROP_PREFIX + "endpoint";
+ 
+     public static interface PublisherBuilder {
+         Publisher get(ProjectTopicName topicName);
+     }
+ 
+     private String projectId;
++    private Optional<String> endpoint;
+ 
+     private final Map<String, Publisher> publishers = new HashMap<>();
+     private PublisherBuilder publisherBuilder;
+@@ -84,11 +94,21 @@ void connect() {
+ 
+         final Config config = ConfigProvider.getConfig();
+         projectId = config.getOptionalValue(PROP_PROJECT_ID, String.class).orElse(ServiceOptions.getDefaultProjectId());
++        endpoint = config.getOptionalValue(PROP_ENDPOINT_NAME, String.class);
++
+         publisherBuilder = (t) -> {
+             try {
+-                return Publisher.newBuilder(t)
+-                        .setEnableMessageOrdering(orderingEnabled)
+-                        .build();
++                Builder builder = Publisher.newBuilder(t)
++                        .setEnableMessageOrdering(orderingEnabled);
++
++                endpoint.ifPresent(v -> {
++                    ManagedChannel channel = ManagedChannelBuilder.forTarget(v).usePlaintext().build();
++                    TransportChannelProvider channelProvider = FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
++                    builder.setChannelProvider(channelProvider);
++                    builder.setCredentialsProvider(NoCredentialsProvider.create());
++                });
++
++                return builder.build();
+             }
+             catch (IOException e) {
+                 throw new DebeziumException(e);
+-- 
+2.23.0
+
