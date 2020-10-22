@@ -83,7 +83,14 @@ If that all works we have a functioning local kinesis to use for testing.
 First test the local pubsub.
 
 ```sh
+git submodule add https://github.com/googleapis/nodejs-pubsub.git
+# If you are following along, this will fail since it's already in the repo.
+# Use this instead:
+#  git submodule update --init
+
 cd nodejs-pubsub/samples
+npm install
+
 export PUBSUB_PROJECT_ID=project_id
 export PUBSUB_EMULATOR_HOST=localhost:8085
 
@@ -144,6 +151,10 @@ Therefor we clone and patch the debezium project.
 ```sh
 # Clone the upstream repo
 git submodule add https://github.com/debezium/debezium.git
+# If you are following along, this will fail since it's already in the repo.
+# Use this instead:
+#  git submodule update --init
+
 cd debezium
 
 # Patch to enable using a local stream endpoints
