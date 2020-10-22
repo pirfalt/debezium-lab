@@ -1,3 +1,6 @@
 [submodule "debezium"]
 	path = debezium
 	url = https://github.com/debezium/debezium.git
+[submodule "nodejs-pubsub"]
+	path = nodejs-pubsub
+	url = https://github.com/googleapis/nodejs-pubsub.git
