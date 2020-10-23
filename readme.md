@@ -24,6 +24,15 @@ Commented history of what commands were run during the lab.
 First of all, start up the local dependencies. Both a pre configured postgres server and a local kinesis server.
 
 ```sh
+# Make sure no unexpected aws profile is active
+aws sts get-caller-identity
+unset AWS_PROFILE
+
+# Make sure no unexpected gcp configuration is active
+gcloud config configurations list
+gcloud config configurations activate local
+
+# Start up local dependencies
 docker-compose up -d
 ```
 
