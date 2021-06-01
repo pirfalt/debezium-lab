@@ -2,7 +2,7 @@ version: "3"
 
 services:
   source-db:
-    image: debezium/example-postgres:1.2
+    image: debezium/example-postgres:1.5
     ports:
       - "5432:5432"
     environment:

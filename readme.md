@@ -9,7 +9,7 @@ https://debezium.io/documentation/reference/1.1/tutorial.html
 
 https://debezium.io/blog/
 https://debezium.io/blog/2020/05/19/debezium-1-2-beta2-released/
-https://debezium.io/documentation/reference/1.2/operations/debezium-server.html
+https://debezium.io/documentation/reference/1.5/operations/debezium-server.html
 
 ## Source
 
@@ -81,7 +81,7 @@ echo "$SHARD_ITERATOR"
 # > AAAAAAAAAAGl5uxo+asOiIswDuwm+yjIqbGFkVuVw9dstmw7COJA/WEXmho5FU06cu+RdCBg1KEmM/YOhPbT4EqtNnTAsl0GVtVo0XLEDeaqTyB9yyGz3t5v53v2PGdFDggjtWVHwuMg+TIQkEA8M/VltmZJj/jBtJl3H64tuCS9IF8H+4eo4oOFvLh99TTaWY1LnjX+u10=
 
 ## Read using the shard iterator
-awslocal kinesis get-records --shard-iterator "$SHARD_ITERATOR" | jq -r '.Records[].Data' | base64 --decode
+awslocal kinesis get-records --shard-iterator "$SHARD_ITERATOR" | jq -r '.Records[].Data'
 # > testdata
 ```
 
@@ -135,7 +135,7 @@ select * from inventory.orders;
 
 ### debezeum-server
 
-https://debezium.io/documentation/reference/1.2/operations/debezium-server.html
+https://debezium.io/documentation/reference/1.5/operations/debezium-server.html
 
 Follow instructions. Download to `./debezeum-server`.
 
@@ -143,18 +143,16 @@ Follow instructions. Download to `./debezeum-server`.
 
 ```sh
 # Debezium server
-curl -O https://repo1.maven.org/maven2/io/debezium/debezium-server-dist/1.3.0.Final/debezium-server-dist-1.3.0.Final.tar.gz
-gunzip debezium-server-dist-1.3.0.Final.tar.gz
-tar -xvf debezium-server-dist-1.3.0.Final.tar
-
-# Common logging dependency
-curl -O https://repo1.maven.org/maven2/commons-logging/commons-logging/1.2/commons-logging-1.2.jar
-mv commons-logging-1.2.jar debezeum-server/lib
+curl -O https://repo1.maven.org/maven2/io/debezium/debezium-server-dist/1.5.2.Final/debezium-server-dist-1.5.2.Final.tar.gz
+gunzip debezium-server-dist-1.5.2.Final.tar.gz
+tar -xvf debezium-server-dist-1.5.2.Final.tar
 ```
 
 #### Git clone
 
-Sadly the distribution does not support local stream endpoints.
+The distribution has support for local kinesis stream endpoints. If you intend to use kinesis you can skip this step.
+
+Sadly the distribution does not support local google pubsub stream endpoints.
 Therefor we clone and patch the debezium project.
 
 ```sh
